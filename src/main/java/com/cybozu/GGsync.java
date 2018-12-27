@@ -150,9 +150,9 @@ public class GGsync {
                 doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
                 doshin.selectDb();
                 daiyaMap = doshin.getDaiyaMap();
-                daiyaMap.forEach((k,v) -> {
-                    System.out.printf("%s: %s%n", k, v);
-                });
+                //daiyaMap.forEach((k,v) -> {
+                //    System.out.printf("%s: %s%n", k, v);
+                //});
             } catch (SQLException e){
                 e.printStackTrace();
             } finally {
@@ -223,30 +223,18 @@ public class GGsync {
             //
             DoshinGaroonDaiya dgaroon = new DoshinGaroonDaiya();
 			for (Iterator<com.cybozu.garoon3.schedule.Event> i = garoonSchedules.iterator(); i.hasNext();) {
-				int garoonScheduleId;
-				String googleScheduleId, scheduleTitle, scheduleLocation = "", scheduleColor = "1";
-				String scheduleDescription = "", scheduleMemo = "", scheduleMembers = "", scheduleComments = "";
-				Date scheduleStart = null, scheduleEnd = null;
-				Date scheduleAllEnd = null; // 繰り返し予定も含めた最後の時間
-				long garoonScheduleVersion;
-				ArrayList<String> recurrenceList = new ArrayList<String>();
-				TimeZone scheduleTimezone = null;
 
 				/** ガルーンのスケジュール情報 **/
 				com.cybozu.garoon3.schedule.Event garoonSchedule = i.next();
-				garoonScheduleId = garoonSchedule.getId();
-				garoonScheduleIdList.add(garoonScheduleId);
-				garoonScheduleVersion = garoonSchedule.getVersion();
-				if (garoonSchedule.getPlan().isEmpty()) {
-					scheduleTitle = garoonSchedule.getDetail();
-				} else {
-					scheduleTitle = garoonSchedule.getPlan() + ": " + garoonSchedule.getDetail();
-				}				
-				scheduleMemo = "▽ メモ ▽" + CRLF + garoonSchedule.getDescription();
-				scheduleTimezone = garoonSchedule.getTimezone();
+                dgaroon.add( garoonSchedule );
                 
-                LOGGER.debug( "■ " + garoonSchedule.getDetail() + " : " + garoonSchedule.getDescription() );
+                LOGGER.debug( "* " + garoonSchedule.getPlan() + " " +  garoonSchedule.getDetail() + " : " + garoonSchedule.getDescription() );
             }
+            dgaroon.getGaroonSchedules().forEach(s -> {
+                System.out.printf("%s%n", s.getDetail() );
+            });
+
+            
             if (devsrvOnly.equals("1")) {
                 LOGGER.debug("運行WEBのみ同期：終了します");
 				System.exit(0);
@@ -278,11 +266,6 @@ public class GGsync {
 				scheduleMemo = "▽ メモ ▽" + CRLF + garoonSchedule.getDescription();
 				scheduleTimezone = garoonSchedule.getTimezone();
                 
-                //----------------------------------------------------------------
-                //
-                // 2018/12/27 add
-                LOGGER.debug( "■ " + garoonSchedule.getDetail() );
-
 
 				/** スケジュールが登録済みか確認。登録済みの場合、戻り値はグーグルカレンダーのID **/
 				String registeredGoogleScheduleId = ggsyncDb.existsScheduleInfo(garoonScheduleId);
