@@ -392,13 +392,14 @@ public class GGsync {
 				} else if (LOGGER.isInfoEnabled()) {
 					LOGGER.info("[ADD] Title:{}", scheduleTitle);
 				}
+                /** 2018/12/27 ここでStopして、GoogleCalenderに登録しない **/
 
-				//LOGGER.info(garoonScheduleId);
-				//LOGGER.info(scheduleTitle);
-				//LOGGER.info(scheduleStart);
-				//LOGGER.info(scheduleEnd);
-				//LOGGER.info(recurrenceList);
-				//System.exit(0);
+				LOGGER.info(garoonScheduleId);
+				LOGGER.info(scheduleTitle);
+				LOGGER.info(scheduleStart);
+				LOGGER.info(scheduleEnd);
+				LOGGER.info(recurrenceList);
+				System.exit(0);
 
 				try {
 					/** グーグルカレンダーに登録 **/
