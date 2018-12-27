@@ -45,6 +45,9 @@ dependencies {
   compile('org.xerial:sqlite-jdbc:3.8.11.2') {transitive = false}
   compile('wsdl4j:wsdl4j:1.6.3') {transitive = false}
   compile('xalan:xalan:2.7.2') {transitive = false}
+  
+  // 2018/12/27 運行WEBアクセス用にjdbcドライバー追加
+  compile files('libs/postgresql-42.2.5.jar')
 }
 
 mainClassName = 'com.cybozu.GGsync'
