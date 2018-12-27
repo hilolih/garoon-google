@@ -110,9 +110,10 @@ public class DoshinUnkoDb {
                 }
             }
         }
-        this.daiyaMap.forEach((k,v) -> {
-            System.out.printf("%s:%s%n", k, v);
-        });
+    }
+
+    public HashMap<String,String> getDaiyaMap() {
+        return this.daiyaMap;
     }
 
     private String formatDate (String d, Boolean next) {
