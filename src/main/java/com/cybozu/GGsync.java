@@ -125,6 +125,18 @@ public class GGsync {
 			//LOGGER.debug("ガルーンのパスワード: " + garoonPassword);
 			LOGGER.debug("SYNC対象の開始時間: " + syncStartDate);
 			LOGGER.debug("SYNC対象の終了時間: " + syncEndDate);
+            
+            //
+            // 運行WEB
+            //
+			String devsrvOnly = ggsyncProperties.getDevsrvOnly();
+			String devsrvUrl = ggsyncProperties.getDevsrvUrl();
+			String devsrvDbAccount = ggsyncProperties.getDevsrvDbAccount();
+			String devsrvDbPass = ggsyncProperties.getDevsrvDbPass();
+			LOGGER.debug("運行WEBのみ同期: " + devsrvOnly);
+			LOGGER.debug("運行WEB URL: " + devsrvUrl);
+			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
+			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
 
 			GoogleCalendar.CredentialConfig config =
 					new GoogleCalendar.CredentialConfig();

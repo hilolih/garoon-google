@@ -19,6 +19,7 @@ public class GGsyncProperties {
 	private String GOOGLE_CALENDAR_NORMAL_COLOR, GOOGLE_CALENDAR_BANNER_COLOR;
 	private String GAROON_URL, GAROON_ACCOUNT, GAROON_PASSWORD;
 	private String EXECUTION_LEVEL;
+	private String DEVSRV_ONLY, DEVSRV_URL, DEVSRV_DB_ACCOUNT, DEVSRV_DB_PASS;
 	private Date SYNC_START_DATE, SYNC_END_DATE;
 	private Date SYNC_START_DATE_UTC, SYNC_END_DATE_UTC;
 	private Integer GAROON_MEMBER_LIMIT;
@@ -63,6 +64,14 @@ public class GGsyncProperties {
 			this.SYNC_END_DATE_UTC = new Date(currentDate.getTime() + 60 * 60 * 24 * 1000 * syncAfterDays - 60 * 60 * 9 * 1000);
 
 			this.EXECUTION_LEVEL = prop.getProperty("execution.level", "0").trim();
+
+			/**
+			 * 2018/12/27 サーバー,DB情報
+			 */
+			this.DEVSRV_ONLY = prop.getProperty("devsrv.only", "0").trim();
+			this.DEVSRV_URL = prop.getProperty("devsrv.url").trim();
+            this.DEVSRV_DB_ACCOUNT = prop.getProperty("devsrv.db.account").trim();
+            this.DEVSRV_DB_PASS = prop.getProperty("devsrv.db.pass").trim();
 		} catch(Exception e) {
 			throw new Exception("Syntax error: " + property + e);
 		}
@@ -134,5 +143,21 @@ public class GGsyncProperties {
 	
 	public Integer getGaroonMemberLimit() {
 		return this.GAROON_MEMBER_LIMIT;
+	}
+
+	public String getDevsrvOnly() {
+		return this.DEVSRV_ONLY;
+	}
+
+	public String getDevsrvUrl() {
+		return this.DEVSRV_URL;
+	}
+
+	public String getDevsrvDbAccount() {
+		return this.DEVSRV_DB_ACCOUNT;
+	}
+
+	public String getDevsrvDbPass() {
+		return this.DEVSRV_DB_PASS;
 	}
 }
