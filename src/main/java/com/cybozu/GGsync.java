@@ -18,11 +18,6 @@ import java.util.List;
 import java.util.Date;
 import java.util.TimeZone;
 import java.net.URI;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -146,31 +141,14 @@ public class GGsync {
 			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
 			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
 
+            DoshinUnkoDb doshin = null;
 
-            Connection conn = null;
-            Statement stmt = null;
-            ResultSet rset = null;
-            Class.forName("org.postgresql.Driver");
-
-            //PostgreSQLへ接続
             try {
-                conn = DriverManager.getConnection(devsrvUrl, devsrvDbAccount, devsrvDbPass);
-                //SELECT文の実行
-                stmt = conn.createStatement();
-                String sql = "select * from daiya where ncode = '" + garoonAccount + "';";
-                LOGGER.debug( "sql statement: " + sql );
-                rset = stmt.executeQuery(sql);
-                //SELECT結果の受け取り
-                while(rset.next()){
-                    String col = rset.getString("d2");
-                    System.out.println(col);
-                }
-                HashMap<String,String> map = new HashMap<String,String>();
-
+                doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
             } catch (SQLException e){
                 e.printStackTrace();
             } finally {
-                conn.close();
+                doshin.close();
             }
 
             if (devsrvOnly.equals("1")) {
