@@ -145,6 +145,7 @@ public class GGsync {
 
             try {
                 doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
+                doshin.selectDb();
             } catch (SQLException e){
                 e.printStackTrace();
             } finally {
