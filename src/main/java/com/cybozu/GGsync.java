@@ -147,11 +147,24 @@ public class GGsync {
 
 
             Connection conn = null;
+            Statement stmt = null;
+            ResultSet rset = null;
             Class.forName("org.postgresql.Driver");
 
             //PostgreSQLへ接続
             try {
                 conn = DriverManager.getConnection(devsrvUrl, devsrvDbAccount, devsrvDbPass);
+                //SELECT文の実行
+                stmt = conn.createStatement();
+                String sql = "select * from daiya where ncode = '" + garoonAccount + "';";
+                LOGGER.debug( "sql statement: " + sql );
+                rset = stmt.executeQuery(sql);
+                //SELECT結果の受け取り
+                while(rset.next()){
+                    String col = rset.getString(1);
+                    System.out.println(col);
+                }
+
             } catch (SQLException e){
                 e.printStackTrace();
             } finally {
