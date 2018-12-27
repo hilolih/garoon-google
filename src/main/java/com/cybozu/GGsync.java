@@ -230,7 +230,10 @@ public class GGsync {
                 
             }
             dgaroon.getGaroonSchedules().forEach(s -> {
-                System.out.printf("%s%n", s.getDetail() );
+                Span span = s.getSpans().get(0);
+                String start = span.getStart().toString();
+                String end = span.getEnd().toString();
+                System.out.printf("%s - %s : %s %n", start, end, s.getDetail() );
             });
 
             
