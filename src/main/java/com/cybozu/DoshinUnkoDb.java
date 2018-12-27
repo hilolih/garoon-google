@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /*
 * DoshinUnkoDb
@@ -26,6 +27,7 @@ public class DoshinUnkoDb {
 	private Connection CON;
 	private Statement STMT;
     private ArrayList<String> Columns = new ArrayList<String>();
+    private HashMap<String,String> daiyaMap = new HashMap<String,String>();
     private String Sql;
     private LocalDateTime ThisMonth, NextMonth;
 
@@ -39,6 +41,7 @@ public class DoshinUnkoDb {
         // unkodbには、先月、今月、来月のダイヤがあるので、今月、来月のみデータを取得するSQL
         // を作成する
         LocalDateTime d = LocalDateTime.now();
+        System.out.println(d);
         this.ThisMonth = d;
         this.NextMonth = d.plusMonths(1);
         String t = String.valueOf( this.ThisMonth.getMonthValue() );
@@ -89,16 +92,43 @@ public class DoshinUnkoDb {
      */
     public void selectDb() throws Exception {
         ResultSet rset = this.STMT.executeQuery(this.Sql);
+        String col = "";
         //SELECT結果の受け取り
         while(rset.next()){
-            String col = rset.getString("month");
-            System.out.println("---- " + col + " ----" );
-            for (String s: this.Columns) {
-                col = rset.getString(s);
-                System.out.println("* " + col);
+            String month = rset.getString("month");
+            if (month.equals(String.valueOf( this.ThisMonth.getMonthValue()))) {
+                // this month
+                for (String s: this.Columns) {
+                    col = rset.getString(s);
+                    System.out.println("* " + formatDate(s, false) + " " + col.replaceAll("(\\d\\d)$", ":$1"));
+                }
+            } else {
+                // next month
+                for (String s: this.Columns) {
+                    col = rset.getString(s);
+                    System.out.println("* " + formatDate(s, true) + " " + col.replaceAll("(\\d\\d)$", ":$1"));
+                }
             }
         }
-        HashMap<String,String> map = new HashMap<String,String>();
+    }
+
+    private String formatDate (String d, Boolean next) {
+        Integer year = null;
+        Integer month = null;
+        if ( next ) {
+            year = this.NextMonth.getYear();
+            month = this.NextMonth.getMonthValue();
+        } else {
+            year = this.ThisMonth.getYear();
+            month = this.ThisMonth.getMonthValue();
+        }
+        // "d1"などのdを削除して数字として日を代入
+        Integer day = Integer.parseInt(d.substring(1));
+        LocalDateTime ldt = LocalDateTime.of( year, month, day, 0, 0, 0 );
+        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String re = ldt.format(f);
+
+        return re;
     }
 
     public void close() throws Exception {
