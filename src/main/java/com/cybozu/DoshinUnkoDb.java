@@ -100,16 +100,19 @@ public class DoshinUnkoDb {
                 // this month
                 for (String s: this.Columns) {
                     col = rset.getString(s);
-                    System.out.println("* " + formatDate(s, false) + " " + col.replaceAll("(\\d\\d)$", ":$1"));
+                    this.daiyaMap.put(formatDate(s, false), col.replaceAll("(\\d\\d)$", ":$1"));
                 }
             } else {
                 // next month
                 for (String s: this.Columns) {
                     col = rset.getString(s);
-                    System.out.println("* " + formatDate(s, true) + " " + col.replaceAll("(\\d\\d)$", ":$1"));
+                    this.daiyaMap.put(formatDate(s, true), col.replaceAll("(\\d\\d)$", ":$1"));
                 }
             }
         }
+        this.daiyaMap.forEach((k,v) -> {
+            System.out.printf("%s:%s%n", k, v);
+        });
     }
 
     private String formatDate (String d, Boolean next) {
