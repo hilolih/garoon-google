@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Date;
 import java.util.TimeZone;
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -126,6 +131,8 @@ public class GGsync {
 			LOGGER.debug("SYNC対象の開始時間: " + syncStartDate);
 			LOGGER.debug("SYNC対象の終了時間: " + syncEndDate);
             
+
+            //----------------------------------------------------------------
             //
             // 運行WEB
             //
@@ -137,6 +144,25 @@ public class GGsync {
 			LOGGER.debug("運行WEB URL: " + devsrvUrl);
 			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
 			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
+
+
+            Connection conn = null;
+            Class.forName("org.postgresql.Driver");
+
+            //PostgreSQLへ接続
+            try {
+                conn = DriverManager.getConnection(devsrvUrl, devsrvDbAccount, devsrvDbPass);
+            } catch (SQLException e){
+                e.printStackTrace();
+            } finally {
+                conn.close();
+            }
+
+            if (devsrvOnly.equals("1")) {
+                LOGGER.debug("運行WEBのみ同期：終了します");
+				System.exit(0);
+            } 
+            //----------------------------------------------------------------
 
 			GoogleCalendar.CredentialConfig config =
 					new GoogleCalendar.CredentialConfig();
