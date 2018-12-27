@@ -15,6 +15,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.Date;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -27,7 +29,7 @@ public class DoshinUnkoDb {
 	private Connection CON;
 	private Statement STMT;
     private ArrayList<String> Columns = new ArrayList<String>();
-    private HashMap<String,String> daiyaMap = new HashMap<String,String>();
+    private HashMap<Date,String> daiyaMap = new HashMap<Date,String>();
     private String Sql;
     private LocalDateTime ThisMonth, NextMonth;
 
@@ -112,11 +114,11 @@ public class DoshinUnkoDb {
         }
     }
 
-    public HashMap<String,String> getDaiyaMap() {
+    public HashMap<Date,String> getDaiyaMap() {
         return this.daiyaMap;
     }
 
-    private String formatDate (String d, Boolean next) {
+    private Date formatDate (String d, Boolean next) {
         Integer year = null;
         Integer month = null;
         if ( next ) {
@@ -129,10 +131,11 @@ public class DoshinUnkoDb {
         // "d1"などのdを削除して数字として日を代入
         Integer day = Integer.parseInt(d.substring(1));
         LocalDateTime ldt = LocalDateTime.of( year, month, day, 0, 0, 0 );
-        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String re = ldt.format(f);
+        // DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        // String re = ldt.format(f);
+        Date date = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 
-        return re;
+        return date;
     }
 
     public void close() throws Exception {

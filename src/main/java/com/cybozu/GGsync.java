@@ -144,12 +144,11 @@ public class GGsync {
 			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
 
             DoshinUnkoDb doshin = null;
-            HashMap<String,String> daiyaMap = null;
 
             try {
                 doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
                 doshin.selectDb();
-                daiyaMap = doshin.getDaiyaMap();
+                //daiyaMap = doshin.getDaiyaMap();
                 //daiyaMap.forEach((k,v) -> {
                 //    System.out.printf("%s: %s%n", k, v);
                 //});
@@ -236,6 +235,11 @@ public class GGsync {
                 System.out.printf("%s - %s : %s %n", start, end, s.getDetail() );
             });
 
+            HashMap<Date,String> daiyaMap = null;
+            daiyaMap = doshin.getDaiyaMap();
+            daiyaMap.forEach((k,v) -> {
+                System.out.println(v);
+            });
             
             if (devsrvOnly.equals("1")) {
                 LOGGER.debug("運行WEBのみ同期：終了します");
