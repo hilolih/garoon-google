@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -161,9 +162,10 @@ public class GGsync {
                 rset = stmt.executeQuery(sql);
                 //SELECT結果の受け取り
                 while(rset.next()){
-                    String col = rset.getString(1);
+                    String col = rset.getString("d2");
                     System.out.println(col);
                 }
+                HashMap<String,String> map = new HashMap<String,String>();
 
             } catch (SQLException e){
                 e.printStackTrace();
