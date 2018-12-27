@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 public class DoshinGaroonDaiya {
 
     private List<com.cybozu.garoon3.schedule.Event> GaroonSchedules;
+    private String Keyword = "--- From Unkou Web ---";
 
     DoshinGaroonDaiya () {
         GaroonSchedules = new ArrayList<com.cybozu.garoon3.schedule.Event>();
@@ -33,6 +34,16 @@ public class DoshinGaroonDaiya {
 
     public void add(com.cybozu.garoon3.schedule.Event event) {
         this.GaroonSchedules.add(event);
+    }
+
+    /*
+     * event内部をみてもし運行WEBから登録されているダイヤだったらArrayListに加える
+     * 
+     */
+    public void add_if_unkoweb_daiya(com.cybozu.garoon3.schedule.Event event) {
+        if ( event.getDescription().indexOf(this.Keyword) >= 0 ) {
+            this.GaroonSchedules.add(event);
+        }
     }
 
     public List<com.cybozu.garoon3.schedule.Event> getGaroonSchedules() {

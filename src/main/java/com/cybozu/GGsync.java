@@ -226,9 +226,8 @@ public class GGsync {
 
 				/** ガルーンのスケジュール情報 **/
 				com.cybozu.garoon3.schedule.Event garoonSchedule = i.next();
-                dgaroon.add( garoonSchedule );
+                dgaroon.add_if_unkoweb_daiya( garoonSchedule );
                 
-                LOGGER.debug( "* " + garoonSchedule.getPlan() + " " +  garoonSchedule.getDetail() + " : " + garoonSchedule.getDescription() );
             }
             dgaroon.getGaroonSchedules().forEach(s -> {
                 System.out.printf("%s%n", s.getDetail() );
