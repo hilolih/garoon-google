@@ -221,10 +221,6 @@ public class GGsync {
             HashMap<Date,String> daiyaMap = null;
             daiyaMap = doshin.getDaiyaMap();
 
-            // daiyaMap.forEach((k,v) -> {
-            //     System.out.println(k + v);
-            // });
-
             /*
              * Garoonからすでに登録してある運行WEBのダイヤを取得
              */
@@ -246,16 +242,13 @@ public class GGsync {
              *   2-2. 一致したら何もしない
              */
             daiyaMap.forEach((date,daiya) -> {
+                if ( dgaroon.existsGaroonSchedules(date) ) {
+                    System.out.println(date + " " + daiya);
+                } else {
+                }
                 //System.out.println(k + v);
             });
             
-            // dgaroon.getGaroonSchedules().forEach(ev -> {
-            //     Span span = ev.getSpans().get(0);
-            //     String start = span.getStart().toString();
-            //     String end = span.getEnd().toString();
-            //     System.out.printf("%s - %s : %s %n", start, end, ev.getDetail() );
-            // });
-
             
             if (devsrvOnly.equals("1")) {
                 LOGGER.debug("運行WEBのみ同期：終了します");

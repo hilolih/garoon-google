@@ -19,6 +19,8 @@ import java.util.Date;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.cybozu.garoon3.schedule.Span;
+
 /*
 * DoshinGaroonDaiya
 * Garoonに運行WEBのダイヤを登録する
@@ -56,7 +58,11 @@ public class DoshinGaroonDaiya {
      * 
      */
     public Boolean existsGaroonSchedules(Date date){
-        return true;
+        return this.GaroonSchedules.stream().anyMatch(ev -> {
+            Span span = ev.getSpans().get(0);
+            Date start = span.getStart();
+            return date.compareTo( start ) == 0;
+        });
     }
 
 }
