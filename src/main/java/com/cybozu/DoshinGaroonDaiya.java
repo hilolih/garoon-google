@@ -80,7 +80,8 @@ public class DoshinGaroonDaiya {
         }
 
         return list.stream().noneMatch(ev -> {
-            return false;
+            System.out.println(!ev.getDetail().equals(daiya));
+            return ev.getDetail().equals(daiya);
         });
     }
 

@@ -248,7 +248,7 @@ public class GGsync {
                     // 2. 既にイベントが登録されていた場合
                     if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
                         // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
-                        System.out.println(date + " " + daiya);
+                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
                     } 
                 }
             });
