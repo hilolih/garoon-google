@@ -128,38 +128,6 @@ public class GGsync {
 			LOGGER.debug("SYNC対象の終了時間: " + syncEndDate);
             
 
-            //----------------------------------------------------------------
-            //
-            // 2018/12/27 add
-            //
-            // 運行WEB
-            //
-			String devsrvOnly = ggsyncProperties.getDevsrvOnly();
-			String devsrvUrl = ggsyncProperties.getDevsrvUrl();
-			String devsrvDbAccount = ggsyncProperties.getDevsrvDbAccount();
-			String devsrvDbPass = ggsyncProperties.getDevsrvDbPass();
-			LOGGER.debug("運行WEBのみ同期: " + devsrvOnly);
-			LOGGER.debug("運行WEB URL: " + devsrvUrl);
-			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
-			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
-
-            DoshinUnkoDb doshin = null;
-
-            try {
-                doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
-                doshin.selectDb();
-                //daiyaMap = doshin.getDaiyaMap();
-                //daiyaMap.forEach((k,v) -> {
-                //    System.out.printf("%s: %s%n", k, v);
-                //});
-            } catch (SQLException e){
-                e.printStackTrace();
-            } finally {
-                doshin.close();
-            }
-
-            //----------------------------------------------------------------
-
 			GoogleCalendar.CredentialConfig config =
 					new GoogleCalendar.CredentialConfig();
 			config.setAuthType(AuthType.valueOf(googleAuthType));
@@ -220,6 +188,46 @@ public class GGsync {
             // 
             // 運行WEB
             //
+
+            /*
+             * Propertiesファイルから設定を取得
+             */
+			String devsrvOnly = ggsyncProperties.getDevsrvOnly();
+			String devsrvUrl = ggsyncProperties.getDevsrvUrl();
+			String devsrvDbAccount = ggsyncProperties.getDevsrvDbAccount();
+			String devsrvDbPass = ggsyncProperties.getDevsrvDbPass();
+			LOGGER.debug("運行WEBのみ同期: " + devsrvOnly);
+			LOGGER.debug("運行WEB URL: " + devsrvUrl);
+			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
+			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
+
+            /*
+             * 運行WEBのDBをSELECTする
+             *
+             * ex) 社員番号が107001で、今月が12月の場合
+             * ※ ncodeの値はgGroonのアカウントと同一のため、流用している
+             * select * from daiya where ncode = '107001' and month IN ('12', '1');
+             */
+            DoshinUnkoDb doshin = null;
+
+            try {
+                doshin = new DoshinUnkoDb(devsrvUrl, devsrvDbAccount, devsrvDbPass, garoonAccount);
+                doshin.selectDb();
+            } catch (SQLException e){
+                e.printStackTrace();
+            } finally {
+                doshin.close();
+            }
+            HashMap<Date,String> daiyaMap = null;
+            daiyaMap = doshin.getDaiyaMap();
+
+            // daiyaMap.forEach((k,v) -> {
+            //     System.out.println(k + v);
+            // });
+
+            /*
+             * Garoonからすでに登録してある運行WEBのダイヤを取得
+             */
             DoshinGaroonDaiya dgaroon = new DoshinGaroonDaiya();
 			for (Iterator<com.cybozu.garoon3.schedule.Event> i = garoonSchedules.iterator(); i.hasNext();) {
 
@@ -228,18 +236,26 @@ public class GGsync {
                 dgaroon.add_if_unkoweb_daiya( garoonSchedule );
                 
             }
-            dgaroon.getGaroonSchedules().forEach(s -> {
-                Span span = s.getSpans().get(0);
-                String start = span.getStart().toString();
-                String end = span.getEnd().toString();
-                System.out.printf("%s - %s : %s %n", start, end, s.getDetail() );
-            });
 
-            HashMap<Date,String> daiyaMap = null;
-            daiyaMap = doshin.getDaiyaMap();
-            daiyaMap.forEach((k,v) -> {
-                System.out.println(v);
+            /*
+             * 運行WEBから取得したダイヤをひとつずつ検証。
+             * 
+             * 1. Garoonに存在しなければ、新規で登録する
+             * 2. 既にイベントが登録されていた場合
+             *   2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
+             *   2-2. 一致したら何もしない
+             */
+            daiyaMap.forEach((date,daiya) -> {
+                //System.out.println(k + v);
             });
+            
+            // dgaroon.getGaroonSchedules().forEach(ev -> {
+            //     Span span = ev.getSpans().get(0);
+            //     String start = span.getStart().toString();
+            //     String end = span.getEnd().toString();
+            //     System.out.printf("%s - %s : %s %n", start, end, ev.getDetail() );
+            // });
+
             
             if (devsrvOnly.equals("1")) {
                 LOGGER.debug("運行WEBのみ同期：終了します");

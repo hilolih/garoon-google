@@ -14,6 +14,7 @@ import java.sql.Statement;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Date;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -48,6 +49,14 @@ public class DoshinGaroonDaiya {
 
     public List<com.cybozu.garoon3.schedule.Event> getGaroonSchedules() {
         return this.GaroonSchedules;
+    }
+
+    /*
+     * 指定した日付にすでに登録した運行WEBダイヤがあるかどうか
+     * 
+     */
+    public Boolean existsGaroonSchedules(Date date){
+        return true;
     }
 
 }
