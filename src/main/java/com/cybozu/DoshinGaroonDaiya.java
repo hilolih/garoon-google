@@ -15,6 +15,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -59,10 +60,34 @@ public class DoshinGaroonDaiya {
      */
     public Boolean existsGaroonSchedules(Date date){
         return this.GaroonSchedules.stream().anyMatch(ev -> {
-            Span span = ev.getSpans().get(0);
-            Date start = span.getStart();
-            return date.compareTo( start ) == 0;
+            return this.compareDate(date, ev);
         });
+    }
+
+    /*
+     * すでに登録されているGaroonのイベントと差異があるかどうか
+     * 
+     */
+    public Boolean diffGaroonSchedule(Date date, String daiya){
+        List<com.cybozu.garoon3.schedule.Event> list = this.GaroonSchedules.stream()
+           .filter(ev -> { return this.compareDate(date, ev); })
+           .collect(Collectors.toList());
+
+        if ( list.size() != 1 ) {
+            System.err.println("[!] 同日に２つ以上の運行WEBダイヤがあります。処理をスキップします: " + date);
+            // 同じイベントがあるようにみせて処理をスキップさせる
+            return false;
+        }
+
+        return list.stream().noneMatch(ev -> {
+            return false;
+        });
+    }
+
+    private Boolean compareDate(Date date, com.cybozu.garoon3.schedule.Event ev) {
+        Span span = ev.getSpans().get(0);
+        Date start = span.getStart();
+        return date.compareTo( start ) == 0;
     }
 
 }

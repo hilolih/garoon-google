@@ -242,11 +242,15 @@ public class GGsync {
              *   2-2. 一致したら何もしない
              */
             daiyaMap.forEach((date,daiya) -> {
-                if ( dgaroon.existsGaroonSchedules(date) ) {
-                    System.out.println(date + " " + daiya);
+                if ( !dgaroon.existsGaroonSchedules(date) ) {
+                    // 1. Garoonに存在しなければ、新規で登録する
                 } else {
+                    // 2. 既にイベントが登録されていた場合
+                    if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
+                        // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
+                        System.out.println(date + " " + daiya);
+                    } 
                 }
-                //System.out.println(k + v);
             });
             
             
