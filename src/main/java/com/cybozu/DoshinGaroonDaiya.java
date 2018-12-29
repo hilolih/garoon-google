@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import com.cybozu.garoon3.schedule.Span;
+import com.cybozu.garoon3.schedule.ScheduleModifyEvents;
 
 /*
 * DoshinGaroonDaiya
@@ -69,9 +70,8 @@ public class DoshinGaroonDaiya {
      * 
      */
     public Boolean diffGaroonSchedule(Date date, String daiya){
-        List<com.cybozu.garoon3.schedule.Event> list = this.GaroonSchedules.stream()
-           .filter(ev -> { return this.compareDate(date, ev); })
-           .collect(Collectors.toList());
+        // 日付が一致するスケジュールを取得
+        List<com.cybozu.garoon3.schedule.Event> list = this.getSameDateSchedule(date);
 
         if ( list.size() != 1 ) {
             System.err.println("[!] 同日に２つ以上の運行WEBダイヤがあります。処理をスキップします: " + date);
@@ -79,16 +79,48 @@ public class DoshinGaroonDaiya {
             return false;
         }
 
+        // 要素数１つのリストに対し、タイトルが一致している場合はtrue、
+        // 同じであればfalseを返す
+        System.out.println(list.stream().noneMatch(ev -> { return ev.getDetail().equals(daiya);}));
         return list.stream().noneMatch(ev -> {
-            System.out.println(!ev.getDetail().equals(daiya));
             return ev.getDetail().equals(daiya);
         });
     }
 
+    public ScheduleModifyEvents updateEvent(Date date, String daiya) {
+        // 日付が一致するスケジュールを取得
+        List<com.cybozu.garoon3.schedule.Event> list = this.getSameDateSchedule(date);
+        ScheduleModifyEvents me = new ScheduleModifyEvents();
+        list.forEach( ev -> {
+            ev.setDetail( daiya );
+            if ( daiya.equals("【休】") ) {
+                ev.setPlan("休み");
+            } else {
+                ev.setPlan("当番");
+            }
+            ev.setAllDay(true);
+            me.addModifyEvent( ev );
+        });
+        return me;
+
+    }
+
+    /*
+     * Eventの日付と運行WEBダイヤの日付を比較
+     */
     private Boolean compareDate(Date date, com.cybozu.garoon3.schedule.Event ev) {
         Span span = ev.getSpans().get(0);
         Date start = span.getStart();
         return date.compareTo( start ) == 0;
+    }
+
+    /*
+     * 日付が一致するスケジュールを取得
+     */
+    private List<com.cybozu.garoon3.schedule.Event> getSameDateSchedule(Date date) {
+        return this.GaroonSchedules.stream()
+           .filter(ev -> { return this.compareDate(date, ev); })
+           .collect(Collectors.toList());
     }
 
 }

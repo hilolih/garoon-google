@@ -43,7 +43,6 @@ public class DoshinUnkoDb {
         // unkodbには、先月、今月、来月のダイヤがあるので、今月、来月のみデータを取得するSQL
         // を作成する
         LocalDateTime d = LocalDateTime.now();
-        System.out.println(d);
         this.ThisMonth = d;
         this.NextMonth = d.plusMonths(1);
         String t = String.valueOf( this.ThisMonth.getMonthValue() );
@@ -101,14 +100,14 @@ public class DoshinUnkoDb {
             if (month.equals(String.valueOf( this.ThisMonth.getMonthValue()))) {
                 // this month
                 for (String s: this.Columns) {
-                    col = rset.getString(s);
-                    this.daiyaMap.put(formatDate(s, false), col.replaceAll("(\\d\\d)$", ":$1"));
+                    col = rset.getString(s).replaceAll("(\\d\\d)$", ":$1");
+                    this.daiyaMap.put(formatDate(s, false), "【" + col + "】");
                 }
             } else {
                 // next month
                 for (String s: this.Columns) {
-                    col = rset.getString(s);
-                    this.daiyaMap.put(formatDate(s, true), col.replaceAll("(\\d\\d)$", ":$1"));
+                    col = rset.getString(s).replaceAll("(\\d\\d)$", ":$1");
+                    this.daiyaMap.put(formatDate(s, true), "【" + col + "】");
                 }
             }
         }

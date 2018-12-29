@@ -241,298 +241,318 @@ public class GGsync {
              *   2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
              *   2-2. 一致したら何もしない
              */
-            daiyaMap.forEach((date,daiya) -> {
+            OMElement oem  = null;
+
+            LOGGER.debug( daiyaMap.size() );
+            for (Date date: daiyaMap.keySet()) {
                 if ( !dgaroon.existsGaroonSchedules(date) ) {
                     // 1. Garoonに存在しなければ、新規で登録する
+                    LOGGER.debug("1 Garoonに登録なし: 新規登録します" + date + " " + daiyaMap.get(date));
                 } else {
                     // 2. 既にイベントが登録されていた場合
-                    if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
+                    if ( dgaroon.diffGaroonSchedule(date, daiyaMap.get(date)) ) {
                         // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
-                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
-                    } 
+                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiyaMap.get(date));
+                        oem = cbClient.sendReceive(dgaroon.updateEvent(date, daiyaMap.get(date)));
+                    } else {
+                        LOGGER.debug("2-2 更新:なし " + date + " " + daiyaMap.get(date));
+                    }
                 }
-            });
-            
-            
+            }
+            //daiyaMap.forEach((date,daiya) -> {
+            //    if ( !dgaroon.existsGaroonSchedules(date) ) {
+            //        // 1. Garoonに存在しなければ、新規で登録する
+            //    } else {
+            //        // 2. 既にイベントが登録されていた場合
+            //        if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
+            //            // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
+            //            LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
+            //            OMElement oem 
+            //                = cbClient.sendReceive(dgaroon.updateEvent(date, daiya));
+            //        } 
+            //    }
+            //});
+
+
             if (devsrvOnly.equals("1")) {
                 LOGGER.debug("運行WEBのみ同期：終了します");
-				System.exit(0);
+                System.exit(0);
             } 
             //
             //
             //----------------------------------------------------------------
 
-			for (Iterator<com.cybozu.garoon3.schedule.Event> i = garoonSchedules.iterator(); i.hasNext();) {
-				int garoonScheduleId;
-				String googleScheduleId, scheduleTitle, scheduleLocation = "", scheduleColor = "1";
-				String scheduleDescription = "", scheduleMemo = "", scheduleMembers = "", scheduleComments = "";
-				Date scheduleStart = null, scheduleEnd = null;
-				Date scheduleAllEnd = null; // 繰り返し予定も含めた最後の時間
-				long garoonScheduleVersion;
-				ArrayList<String> recurrenceList = new ArrayList<String>();
-				TimeZone scheduleTimezone = null;
+            for (Iterator<com.cybozu.garoon3.schedule.Event> i = garoonSchedules.iterator(); i.hasNext();) {
+                int garoonScheduleId;
+                String googleScheduleId, scheduleTitle, scheduleLocation = "", scheduleColor = "1";
+                String scheduleDescription = "", scheduleMemo = "", scheduleMembers = "", scheduleComments = "";
+                Date scheduleStart = null, scheduleEnd = null;
+                Date scheduleAllEnd = null; // 繰り返し予定も含めた最後の時間
+                long garoonScheduleVersion;
+                ArrayList<String> recurrenceList = new ArrayList<String>();
+                TimeZone scheduleTimezone = null;
 
-				/** ガルーンのスケジュール情報 **/
-				com.cybozu.garoon3.schedule.Event garoonSchedule = i.next();
-				garoonScheduleId = garoonSchedule.getId();
-				garoonScheduleIdList.add(garoonScheduleId);
-				garoonScheduleVersion = garoonSchedule.getVersion();
-				if (garoonSchedule.getPlan().isEmpty()) {
-					scheduleTitle = garoonSchedule.getDetail();
-				} else {
-					scheduleTitle = garoonSchedule.getPlan() + ": " + garoonSchedule.getDetail();
-				}				
-				scheduleMemo = "▽ メモ ▽" + CRLF + garoonSchedule.getDescription();
-				scheduleTimezone = garoonSchedule.getTimezone();
-                
-
-				/** スケジュールが登録済みか確認。登録済みの場合、戻り値はグーグルカレンダーのID **/
-				String registeredGoogleScheduleId = ggsyncDb.existsScheduleInfo(garoonScheduleId);
-				if (registeredGoogleScheduleId != null && !registeredGoogleScheduleId.isEmpty()) {
-					if (!ggsyncDb.confirmUpdatedScheduleInfo(garoonScheduleId, garoonScheduleVersion)) {
-						/** グーグルカレンダーに登録済みで、更新の無いスケジュール **/
-						//LOGGER.debug("[NOTHING for registered schedule] GaroonId:{} GoogleId:{} Title:{}", 
-						//		garoonScheduleId, registeredGoogleScheduleId, scheduleTitle);
-						continue;
-					} else {
-						/** グーグルカレンダーに登録済みで、更新されたスケジュール **/
-						if(LOGGER.isDebugEnabled()) {
-							LOGGER.debug("[DEL] for updated garoon schedule. GaroonId:{} GoogleId:{} Title:{}",
-									garoonScheduleId, registeredGoogleScheduleId, scheduleTitle);
-						} else if (LOGGER.isInfoEnabled()) {
-							LOGGER.info("[DEL] for updated garoon schedule. Title:{}", scheduleTitle);
-						}
-
-						/** グーグルカレンダーのスケジュールを削除 **/
-						try {
-							googleCalendar.delSchedule(registeredGoogleScheduleId);
-						} catch (GoogleJsonResponseException e) {
-							LOGGER.info("[FAILED] google schedule is already deleted. GoogleId:{}, Message:{}", registeredGoogleScheduleId, e.getMessage());
-						}
-
-						/** SQLiteのレコードを削除 **/
-						ggsyncDb.delScheduleInfo(garoonScheduleId);
-					}
-				}
+                /** ガルーンのスケジュール情報 **/
+                com.cybozu.garoon3.schedule.Event garoonSchedule = i.next();
+                garoonScheduleId = garoonSchedule.getId();
+                garoonScheduleIdList.add(garoonScheduleId);
+                garoonScheduleVersion = garoonSchedule.getVersion();
+                if (garoonSchedule.getPlan().isEmpty()) {
+                    scheduleTitle = garoonSchedule.getDetail();
+                } else {
+                    scheduleTitle = garoonSchedule.getPlan() + ": " + garoonSchedule.getDetail();
+                }				
+                scheduleMemo = "▽ メモ ▽" + CRLF + garoonSchedule.getDescription();
+                scheduleTimezone = garoonSchedule.getTimezone();
 
 
+                /** スケジュールが登録済みか確認。登録済みの場合、戻り値はグーグルカレンダーのID **/
+                String registeredGoogleScheduleId = ggsyncDb.existsScheduleInfo(garoonScheduleId);
+                if (registeredGoogleScheduleId != null && !registeredGoogleScheduleId.isEmpty()) {
+                    if (!ggsyncDb.confirmUpdatedScheduleInfo(garoonScheduleId, garoonScheduleVersion)) {
+                        /** グーグルカレンダーに登録済みで、更新の無いスケジュール **/
+                        //LOGGER.debug("[NOTHING for registered schedule] GaroonId:{} GoogleId:{} Title:{}", 
+                        //		garoonScheduleId, registeredGoogleScheduleId, scheduleTitle);
+                        continue;
+                    } else {
+                        /** グーグルカレンダーに登録済みで、更新されたスケジュール **/
+                        if(LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("[DEL] for updated garoon schedule. GaroonId:{} GoogleId:{} Title:{}",
+                                    garoonScheduleId, registeredGoogleScheduleId, scheduleTitle);
+                        } else if (LOGGER.isInfoEnabled()) {
+                            LOGGER.info("[DEL] for updated garoon schedule. Title:{}", scheduleTitle);
+                        }
 
-				if (garoonSchedule.getEventType() == EventType.NORMAL) {
-					/**
-					 * 通常予定
-					 */
-					Span span = garoonSchedule.getSpans().get(0);
-					if (!garoonSchedule.isAllDay()) {
-						scheduleStart = new Date(span.getStart().getTime());
-						if (garoonSchedule.isStartOnly()) {
-							/** 開始時間のみのスケジュールの場合は終了時間に開始時間をセット **/
-							scheduleEnd = scheduleStart;
-						} else {
-							scheduleEnd = new Date(span.getEnd().getTime());
-						}
-					} else if (garoonSchedule.isAllDay()) {
-						scheduleStart = new Date(span.getStart().getTime());
-						scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
-					}
-					scheduleColor = googleCalendarNormalColor;
-					scheduleAllEnd = scheduleEnd;
-				} else if (garoonSchedule.getEventType() == EventType.BANNER) {
-					/**
-					 * 期間予定
-					 */
-					Span span = garoonSchedule.getSpans().get(0);
-					scheduleStart = new Date(span.getStart().getTime());
-					scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
-					scheduleColor = googleCalendarBannerColor;
-					scheduleAllEnd = scheduleEnd;
-				} else if (garoonSchedule.getEventType() == EventType.TEMPORARY) {
-					/**
-					 * 仮予定
-					 * 
-					 * TEMPORARYの場合はSpanが複数
-					 */
-					Span span = garoonSchedule.getSpans().get(0);
-					scheduleStart = new Date(span.getStart().getTime());
-					scheduleEnd = new Date(span.getEnd().getTime());
-					scheduleAllEnd = scheduleEnd;
+                        /** グーグルカレンダーのスケジュールを削除 **/
+                        try {
+                            googleCalendar.delSchedule(registeredGoogleScheduleId);
+                        } catch (GoogleJsonResponseException e) {
+                            LOGGER.info("[FAILED] google schedule is already deleted. GoogleId:{}, Message:{}", registeredGoogleScheduleId, e.getMessage());
+                        }
 
-					Iterator<Span> e = garoonSchedule.getSpans().iterator();
-					ArrayList<String> alternativeList = new ArrayList<String>();
-					while (e.hasNext()) {
-						Span n = e.next();
-						alternativeList.add(
-								googleCalendar.getTemporaryDate(new Date(n.getStart().getTime()), new Date(n.getEnd().getTime())));
-					}
-					if (alternativeList.size() > 0) {
-						recurrenceList.add("RDATE;VALUE=PERIOD:" + StringUtils.join(alternativeList, ","));
-					}
-				} else if (garoonSchedule.getEventType() == EventType.REPEAT) {
-					/**
-					 * 繰り返し予定
-					 */
-					Date until = null;
-					RepeatInfo repeatInfo = garoonSchedule.getRepeatInfo();
-
-					Span span = garoonSchedule.getSpans().get(0);
-					if (!garoonSchedule.isAllDay()) {
-						scheduleStart = new Date(span.getStart().getTime());
-						scheduleEnd = new Date(span.getEnd().getTime());
-
-						DateFormat startTimeFormatter = new SimpleDateFormat("HH:mm:ss");
-						Date startTime = (Date)startTimeFormatter.parse(repeatInfo.getStartTime());
-						/** starttime.getTime()はタイムゾーンが考慮されるため、TimeZone.getDefault().getRawOffset()を追加 **/
-						until = new Date(repeatInfo.getEndDate().getTime() + startTime.getTime() + TimeZone.getDefault().getRawOffset());
-					} else if (garoonSchedule.isAllDay()) {
-						scheduleStart = new Date(span.getStart().getTime());
-						scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
-						until = new Date(repeatInfo.getEndDate().getTime());
-					}
-					scheduleColor = googleCalendarNormalColor;
-					scheduleAllEnd = until;
+                        /** SQLiteのレコードを削除 **/
+                        ggsyncDb.delScheduleInfo(garoonScheduleId);
+                    }
+                }
 
 
 
-					switch (repeatInfo.getType()) {
-					case DAY: /** 毎日 **/
-						recurrenceList.add(googleCalendar.getRecurrenceListDaily(until));
-						break;
-					case WEEK: /** 毎週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceListWeekly(until));
-						break;
-					case WEEKDAY: /** 毎日（土日を除く） **/
-						recurrenceList.add(googleCalendar.getRecurrenceListWeekday(until));
-						break;
-					case WEEK_1ST: /** 毎月第一週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceList1stweek(until, repeatInfo.getWeek()));
-						break;
-					case WEEK_2ND: /** 毎月第二週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceList2ndweek(until, repeatInfo.getWeek()));
-						break;
-					case WEEK_3RD: /** 毎月第三週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceList3rdweek(until, repeatInfo.getWeek()));
-						break;
-					case WEEK_4TH: /** 毎月第四週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceList4thweek(until, repeatInfo.getWeek()));
-						break;
-					case WEEK_LAST: /** 毎月最終週 **/
-						recurrenceList.add(googleCalendar.getRecurrenceListLastweek(until, repeatInfo.getWeek()));
-						break;
-					case MONTH: /** 毎月 **/
-						recurrenceList.add(googleCalendar.getRecurrenceListMonthly(until));
-						break;
-					default:
-						throw new Exception("Undefined error: " + repeatInfo.getType());
-					}
+                if (garoonSchedule.getEventType() == EventType.NORMAL) {
+                    /**
+                     * 通常予定
+                     */
+                    Span span = garoonSchedule.getSpans().get(0);
+                    if (!garoonSchedule.isAllDay()) {
+                        scheduleStart = new Date(span.getStart().getTime());
+                        if (garoonSchedule.isStartOnly()) {
+                            /** 開始時間のみのスケジュールの場合は終了時間に開始時間をセット **/
+                            scheduleEnd = scheduleStart;
+                        } else {
+                            scheduleEnd = new Date(span.getEnd().getTime());
+                        }
+                    } else if (garoonSchedule.isAllDay()) {
+                        scheduleStart = new Date(span.getStart().getTime());
+                        scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
+                    }
+                    scheduleColor = googleCalendarNormalColor;
+                    scheduleAllEnd = scheduleEnd;
+                } else if (garoonSchedule.getEventType() == EventType.BANNER) {
+                    /**
+                     * 期間予定
+                     */
+                    Span span = garoonSchedule.getSpans().get(0);
+                    scheduleStart = new Date(span.getStart().getTime());
+                    scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
+                    scheduleColor = googleCalendarBannerColor;
+                    scheduleAllEnd = scheduleEnd;
+                } else if (garoonSchedule.getEventType() == EventType.TEMPORARY) {
+                    /**
+                     * 仮予定
+                     * 
+                     * TEMPORARYの場合はSpanが複数
+                     */
+                    Span span = garoonSchedule.getSpans().get(0);
+                    scheduleStart = new Date(span.getStart().getTime());
+                    scheduleEnd = new Date(span.getEnd().getTime());
+                    scheduleAllEnd = scheduleEnd;
+
+                    Iterator<Span> e = garoonSchedule.getSpans().iterator();
+                    ArrayList<String> alternativeList = new ArrayList<String>();
+                    while (e.hasNext()) {
+                        Span n = e.next();
+                        alternativeList.add(
+                                googleCalendar.getTemporaryDate(new Date(n.getStart().getTime()), new Date(n.getEnd().getTime())));
+                    }
+                    if (alternativeList.size() > 0) {
+                        recurrenceList.add("RDATE;VALUE=PERIOD:" + StringUtils.join(alternativeList, ","));
+                    }
+                } else if (garoonSchedule.getEventType() == EventType.REPEAT) {
+                    /**
+                     * 繰り返し予定
+                     */
+                    Date until = null;
+                    RepeatInfo repeatInfo = garoonSchedule.getRepeatInfo();
+
+                    Span span = garoonSchedule.getSpans().get(0);
+                    if (!garoonSchedule.isAllDay()) {
+                        scheduleStart = new Date(span.getStart().getTime());
+                        scheduleEnd = new Date(span.getEnd().getTime());
+
+                        DateFormat startTimeFormatter = new SimpleDateFormat("HH:mm:ss");
+                        Date startTime = (Date)startTimeFormatter.parse(repeatInfo.getStartTime());
+                        /** starttime.getTime()はタイムゾーンが考慮されるため、TimeZone.getDefault().getRawOffset()を追加 **/
+                        until = new Date(repeatInfo.getEndDate().getTime() + startTime.getTime() + TimeZone.getDefault().getRawOffset());
+                    } else if (garoonSchedule.isAllDay()) {
+                        scheduleStart = new Date(span.getStart().getTime());
+                        scheduleEnd = new Date(span.getEnd().getTime() + 24 * 60 * 60 * 1000);
+                        until = new Date(repeatInfo.getEndDate().getTime());
+                    }
+                    scheduleColor = googleCalendarNormalColor;
+                    scheduleAllEnd = until;
 
 
 
-					/**
-					 * 繰り返し予定の除外設定
-					 */
-					Iterator<Span> e = repeatInfo.getExclusiveDateTimes().iterator();
-					ArrayList<String> excludeList = new ArrayList<String>();
-					while (e.hasNext()) {
-						excludeList.add(googleCalendar.getExcludeDate(new Date(e.next().getStart().getTime())));
-					}
-					if (excludeList.size() > 0) {
-						recurrenceList.add("EXDATE;TZID=UTC;VALUE=DATE-TIME:" + StringUtils.join(excludeList, ","));
-					}
-				}
-
-				if (garoonSchedule.isStartOnly()) {
-					/** 開始時間のみのスケジュールの場合は終了時間に開始時間をセット **/
-					scheduleEnd = scheduleStart;
-				}
-
-
-
-				/** 施設の取得 **/
-				ScheduleGetFacilitiesById scheduleGetFacilitiesById = garoonSchedular.getFacilitiesId(garoonSchedule.getMembers());
-				if (scheduleGetFacilitiesById.size() > 0) {
-					OMElement facilitiesElement = cbClient.sendReceive(scheduleGetFacilitiesById);
-					scheduleLocation = garoonSchedular.getFacilitiesInfo(facilitiesElement);
-				}
-
-				/** 参加者の取得 **/
-				List<Member> members = garoonSchedule.getMembers();
-				if ((members.size() > 0) && (garoonMemberLimit > 0)) {
-					scheduleMembers += garoonSchedular.getMembersInfo(garoonUid, garoonMemberLimit, members);		
-				}
-				
-				/** コメントの取得 **/
-				List<Follow> follows = garoonSchedule.getFollows();
-				if (follows.size() > 0) {
-					scheduleComments += garoonSchedular.getFollowsInfo(follows);
-				}
-				
-				scheduleDescription = scheduleMembers + scheduleMemo + CRLF + CRLF + scheduleComments;
+                    switch (repeatInfo.getType()) {
+                        case DAY: /** 毎日 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceListDaily(until));
+                            break;
+                        case WEEK: /** 毎週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceListWeekly(until));
+                            break;
+                        case WEEKDAY: /** 毎日（土日を除く） **/
+                            recurrenceList.add(googleCalendar.getRecurrenceListWeekday(until));
+                            break;
+                        case WEEK_1ST: /** 毎月第一週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceList1stweek(until, repeatInfo.getWeek()));
+                            break;
+                        case WEEK_2ND: /** 毎月第二週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceList2ndweek(until, repeatInfo.getWeek()));
+                            break;
+                        case WEEK_3RD: /** 毎月第三週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceList3rdweek(until, repeatInfo.getWeek()));
+                            break;
+                        case WEEK_4TH: /** 毎月第四週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceList4thweek(until, repeatInfo.getWeek()));
+                            break;
+                        case WEEK_LAST: /** 毎月最終週 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceListLastweek(until, repeatInfo.getWeek()));
+                            break;
+                        case MONTH: /** 毎月 **/
+                            recurrenceList.add(googleCalendar.getRecurrenceListMonthly(until));
+                            break;
+                        default:
+                            throw new Exception("Undefined error: " + repeatInfo.getType());
+                    }
 
 
 
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("[ADD] GaroonId:{} Title:{}", garoonScheduleId, scheduleTitle);
-				} else if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("[ADD] Title:{}", scheduleTitle);
-				}
-                /** 2018/12/27 ここでStopして、GoogleCalenderに登録しない **/
+                    /**
+                     * 繰り返し予定の除外設定
+                     */
+                    Iterator<Span> e = repeatInfo.getExclusiveDateTimes().iterator();
+                    ArrayList<String> excludeList = new ArrayList<String>();
+                    while (e.hasNext()) {
+                        excludeList.add(googleCalendar.getExcludeDate(new Date(e.next().getStart().getTime())));
+                    }
+                    if (excludeList.size() > 0) {
+                        recurrenceList.add("EXDATE;TZID=UTC;VALUE=DATE-TIME:" + StringUtils.join(excludeList, ","));
+                    }
+                }
 
-				LOGGER.info(garoonScheduleId);
-				LOGGER.info(scheduleTitle);
-				LOGGER.info(scheduleStart);
-				LOGGER.info(scheduleEnd);
-				LOGGER.info(recurrenceList);
-				System.exit(0);
-
-				try {
-					/** グーグルカレンダーに登録 **/
-					googleScheduleId = googleCalendar.addSchedule(scheduleStart, scheduleEnd, 
-							scheduleTitle, scheduleDescription, scheduleLocation, scheduleColor, recurrenceList, scheduleTimezone);
-
-					/** グーグルカレンダーへの登録情報をSQLiteに登録 **/
-					ggsyncDb.addScheduleInfo(garoonScheduleId, garoonScheduleVersion, googleScheduleId, scheduleAllEnd);
-				} catch (GoogleJsonResponseException e) {
-					LOGGER.error("[FAILED] registration google calendar. GaroonId:{}, Message:{}", garoonScheduleId, e.getMessage());
-					System.exit(1);
-				} catch (SQLException e) {
-					LOGGER.error("[FAILED] registration local db. GaroonId:{}, Message:{}", garoonScheduleId, e.getMessage());
-					System.exit(1);
-				}
-			}
+                if (garoonSchedule.isStartOnly()) {
+                    /** 開始時間のみのスケジュールの場合は終了時間に開始時間をセット **/
+                    scheduleEnd = scheduleStart;
+                }
 
 
 
-			/** ガルーンから削除されたスケジュールをグーグルカレンダーからも削除 **/
-			ArrayList<String> needDeleteGoogleScheduleIdList = ggsyncDb.getNeedDeleteGoogleScheduleIdList(garoonScheduleIdList);
-			Iterator<String> i = needDeleteGoogleScheduleIdList.iterator();
-			while (i.hasNext()) {
-				String tid = i.next();
+                /** 施設の取得 **/
+                ScheduleGetFacilitiesById scheduleGetFacilitiesById = garoonSchedular.getFacilitiesId(garoonSchedule.getMembers());
+                if (scheduleGetFacilitiesById.size() > 0) {
+                    OMElement facilitiesElement = cbClient.sendReceive(scheduleGetFacilitiesById);
+                    scheduleLocation = garoonSchedular.getFacilitiesInfo(facilitiesElement);
+                }
 
-				if(LOGGER.isDebugEnabled()) {
-					LOGGER.debug("[DEL for deleted garoon schedule] GoogleId:{}", tid);
-				} else if (LOGGER.isInfoEnabled()) {
-					LOGGER.info("[DEL for deleted garoon schedule] GoogleId:{}", tid);
-				}
+                /** 参加者の取得 **/
+                List<Member> members = garoonSchedule.getMembers();
+                if ((members.size() > 0) && (garoonMemberLimit > 0)) {
+                    scheduleMembers += garoonSchedular.getMembersInfo(garoonUid, garoonMemberLimit, members);		
+                }
 
-				try {
-					googleCalendar.delSchedule(tid);
-				} catch (GoogleJsonResponseException e) {
-					LOGGER.info("[FAILED] google schedule is already deleted. GoogleId:{}, Message:{}", tid, e.getMessage());
-				}
-				ggsyncDb.delScheduleInfoByGoogleId(tid);
-			}
+                /** コメントの取得 **/
+                List<Follow> follows = garoonSchedule.getFollows();
+                if (follows.size() > 0) {
+                    scheduleComments += garoonSchedular.getFollowsInfo(follows);
+                }
+
+                scheduleDescription = scheduleMembers + scheduleMemo + CRLF + CRLF + scheduleComments;
 
 
 
-			/** SYNC開始日より30日以前の古いデータをSQLiteから削除 **/
-			ggsyncDb.delOldScheduleInfo(ggsyncProperties.getSyncStartDate().getTime() - (long)30 * 24 * 60 * 60 * 1000);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[ADD] GaroonId:{} Title:{}", garoonScheduleId, scheduleTitle);
+                } else if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("[ADD] Title:{}", scheduleTitle);
+                }
+                // /** 2018/12/27 ここでStopして、GoogleCalenderに登録しない **/
 
-			LOGGER.info("The sync completed.");
-		}
-		catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
-		}
+                // LOGGER.info(garoonScheduleId);
+                // LOGGER.info(scheduleTitle);
+                // LOGGER.info(scheduleStart);
+                // LOGGER.info(scheduleEnd);
+                // LOGGER.info(recurrenceList);
+                // System.exit(0);
 
-		return;
-	}
+                try {
+                    /** グーグルカレンダーに登録 **/
+                    googleScheduleId = googleCalendar.addSchedule(scheduleStart, scheduleEnd, 
+                            scheduleTitle, scheduleDescription, scheduleLocation, scheduleColor, recurrenceList, scheduleTimezone);
+
+                    /** グーグルカレンダーへの登録情報をSQLiteに登録 **/
+                    ggsyncDb.addScheduleInfo(garoonScheduleId, garoonScheduleVersion, googleScheduleId, scheduleAllEnd);
+                } catch (GoogleJsonResponseException e) {
+                    LOGGER.error("[FAILED] registration google calendar. GaroonId:{}, Message:{}", garoonScheduleId, e.getMessage());
+                    System.exit(1);
+                } catch (SQLException e) {
+                    LOGGER.error("[FAILED] registration local db. GaroonId:{}, Message:{}", garoonScheduleId, e.getMessage());
+                    System.exit(1);
+                }
+            }
+
+
+
+            /** ガルーンから削除されたスケジュールをグーグルカレンダーからも削除 **/
+            ArrayList<String> needDeleteGoogleScheduleIdList = ggsyncDb.getNeedDeleteGoogleScheduleIdList(garoonScheduleIdList);
+            Iterator<String> i = needDeleteGoogleScheduleIdList.iterator();
+            while (i.hasNext()) {
+                String tid = i.next();
+
+                if(LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("[DEL for deleted garoon schedule] GoogleId:{}", tid);
+                } else if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("[DEL for deleted garoon schedule] GoogleId:{}", tid);
+                }
+
+                try {
+                    googleCalendar.delSchedule(tid);
+                } catch (GoogleJsonResponseException e) {
+                    LOGGER.info("[FAILED] google schedule is already deleted. GoogleId:{}, Message:{}", tid, e.getMessage());
+                }
+                ggsyncDb.delScheduleInfoByGoogleId(tid);
+            }
+
+
+
+            /** SYNC開始日より30日以前の古いデータをSQLiteから削除 **/
+            ggsyncDb.delOldScheduleInfo(ggsyncProperties.getSyncStartDate().getTime() - (long)30 * 24 * 60 * 60 * 1000);
+
+            LOGGER.info("The sync completed.");
+        }
+        catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+
+        return;
+    }
 
 }
