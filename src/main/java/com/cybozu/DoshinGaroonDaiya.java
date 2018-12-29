@@ -32,9 +32,11 @@ public class DoshinGaroonDaiya {
 
     private List<com.cybozu.garoon3.schedule.Event> GaroonSchedules;
     private String Keyword = "--- From Unkou Web ---";
+    private ScheduleModifyEvents ModifyEvents;
 
     DoshinGaroonDaiya () {
-        GaroonSchedules = new ArrayList<com.cybozu.garoon3.schedule.Event>();
+        this.GaroonSchedules = new ArrayList<com.cybozu.garoon3.schedule.Event>();
+        this.ModifyEvents = new ScheduleModifyEvents();
     }
 
     public void add(com.cybozu.garoon3.schedule.Event event) {
@@ -81,16 +83,15 @@ public class DoshinGaroonDaiya {
 
         // 要素数１つのリストに対し、タイトルが一致している場合はtrue、
         // 同じであればfalseを返す
-        System.out.println(list.stream().noneMatch(ev -> { return ev.getDetail().equals(daiya);}));
+        // System.out.println(list.stream().noneMatch(ev -> { return ev.getDetail().equals(daiya);}));
         return list.stream().noneMatch(ev -> {
             return ev.getDetail().equals(daiya);
         });
     }
 
-    public ScheduleModifyEvents updateEvent(Date date, String daiya) {
+    public void addUpdateEvent(Date date, String daiya) {
         // 日付が一致するスケジュールを取得
         List<com.cybozu.garoon3.schedule.Event> list = this.getSameDateSchedule(date);
-        ScheduleModifyEvents me = new ScheduleModifyEvents();
         list.forEach( ev -> {
             ev.setDetail( daiya );
             if ( daiya.equals("【休】") ) {
@@ -99,10 +100,13 @@ public class DoshinGaroonDaiya {
                 ev.setPlan("当番");
             }
             ev.setAllDay(true);
-            me.addModifyEvent( ev );
+            this.ModifyEvents.addModifyEvent( ev );
         });
-        return me;
 
+    }
+
+    public ScheduleModifyEvents getModifyEvents() {
+        return this.ModifyEvents;
     }
 
     /*

@@ -243,35 +243,19 @@ public class GGsync {
              */
             OMElement oem  = null;
 
-            LOGGER.debug( daiyaMap.size() );
-            for (Date date: daiyaMap.keySet()) {
+            daiyaMap.forEach((date,daiya) -> {
                 if ( !dgaroon.existsGaroonSchedules(date) ) {
                     // 1. Garoonに存在しなければ、新規で登録する
-                    LOGGER.debug("1 Garoonに登録なし: 新規登録します" + date + " " + daiyaMap.get(date));
                 } else {
                     // 2. 既にイベントが登録されていた場合
-                    if ( dgaroon.diffGaroonSchedule(date, daiyaMap.get(date)) ) {
+                    if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
                         // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
-                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiyaMap.get(date));
-                        oem = cbClient.sendReceive(dgaroon.updateEvent(date, daiyaMap.get(date)));
-                    } else {
-                        LOGGER.debug("2-2 更新:なし " + date + " " + daiyaMap.get(date));
-                    }
+                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
+                        dgaroon.addUpdateEvent(date, daiya);
+                    } 
                 }
-            }
-            //daiyaMap.forEach((date,daiya) -> {
-            //    if ( !dgaroon.existsGaroonSchedules(date) ) {
-            //        // 1. Garoonに存在しなければ、新規で登録する
-            //    } else {
-            //        // 2. 既にイベントが登録されていた場合
-            //        if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
-            //            // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
-            //            LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
-            //            OMElement oem 
-            //                = cbClient.sendReceive(dgaroon.updateEvent(date, daiya));
-            //        } 
-            //    }
-            //});
+            });
+            oem = cbClient.sendReceive( dgaroon.getModifyEvents());
 
 
             if (devsrvOnly.equals("1")) {
