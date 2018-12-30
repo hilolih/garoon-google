@@ -14,6 +14,8 @@ import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import java.util.Date;
 import java.time.ZoneId;
@@ -101,13 +103,13 @@ public class DoshinUnkoDb {
                 // this month
                 for (String s: this.Columns) {
                     col = rset.getString(s).replaceAll("(\\d\\d)$", ":$1");
-                    this.daiyaMap.put(formatDate(s, false), "【" + col + "】");
+                    this.daiyaMap.put(formatDate(s, col, false), "【" + col + "】");
                 }
             } else {
                 // next month
                 for (String s: this.Columns) {
                     col = rset.getString(s).replaceAll("(\\d\\d)$", ":$1");
-                    this.daiyaMap.put(formatDate(s, true), "【" + col + "】");
+                    this.daiyaMap.put(formatDate(s, col, true), "【" + col + "】");
                 }
             }
         }
@@ -117,7 +119,15 @@ public class DoshinUnkoDb {
         return this.daiyaMap;
     }
 
-    private Date formatDate (String d, Boolean next) {
+    private Date formatDate (String d, String daiya, Boolean next) {
+        Matcher m = Pattern.compile("^(\\d+):\\d\\d").matcher( daiya );
+        int hour = 0;
+        if (m.matches()) {
+            hour = Integer.parseInt(m.group(1));
+        } else if ( daiya.indexOf("F") >= 0 ) {
+            hour = 9;
+        }
+
         Integer year = null;
         Integer month = null;
         if ( next ) {
@@ -129,7 +139,7 @@ public class DoshinUnkoDb {
         }
         // "d1"などのdを削除して数字として日を代入
         Integer day = Integer.parseInt(d.substring(1));
-        LocalDateTime ldt = LocalDateTime.of( year, month, day, 0, 0, 0 );
+        LocalDateTime ldt = LocalDateTime.of( year, month, day, hour, 0, 0 );
         // DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         // String re = ldt.format(f);
         Date date = Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());

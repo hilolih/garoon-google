@@ -246,16 +246,17 @@ public class GGsync {
             daiyaMap.forEach((date,daiya) -> {
                 if ( !dgaroon.existsGaroonSchedules(date) ) {
                     // 1. Garoonに存在しなければ、新規で登録する
+                    LOGGER.info("[*] 新規登録: " + date + " " + daiya);
                 } else {
                     // 2. 既にイベントが登録されていた場合
                     if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
                         // 2-1. 比較して違うところがあればGaroonのイベントをUPDATEする 
-                        LOGGER.debug("2-1 イベントの更新: " + date + " " + daiya);
+                        LOGGER.info("[*] 更新: " + date + " " + daiya);
                         dgaroon.addUpdateEvent(date, daiya);
-                    } 
+                    }
                 }
             });
-            oem = cbClient.sendReceive( dgaroon.getModifyEvents());
+            oem = cbClient.sendReceive( dgaroon.getModifyEvents() );
 
 
             if (devsrvOnly.equals("1")) {
