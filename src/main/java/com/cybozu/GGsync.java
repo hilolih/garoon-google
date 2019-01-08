@@ -197,10 +197,14 @@ public class GGsync {
 			String devsrvUrl = ggsyncProperties.getDevsrvUrl();
 			String devsrvDbAccount = ggsyncProperties.getDevsrvDbAccount();
 			String devsrvDbPass = ggsyncProperties.getDevsrvDbPass();
+			String garoonId = ggsyncProperties.getGaroonId();
+			String garoonUsername = ggsyncProperties.getGaroonUsername();
 			LOGGER.debug("運行WEBのみ同期: " + devsrvOnly);
 			LOGGER.debug("運行WEB URL: " + devsrvUrl);
 			LOGGER.debug("運行WEB DBアカウント: " + devsrvDbAccount);
 			LOGGER.debug("運行WEB DBパスワード: " + devsrvDbPass);
+			LOGGER.debug("Garoon ID: " + garoonId);
+			LOGGER.debug("Garoon Username: " + garoonUsername);
 
             /*
              * 運行WEBのDBをSELECTする
@@ -248,6 +252,7 @@ public class GGsync {
                 if ( !dgaroon.existsGaroonSchedules(date) ) {
                     // 1. Garoonに存在しなければ、新規で登録する
                     LOGGER.info("[*] 新規登録: " + date + " " + daiya);
+                    //dgaroon.addNewEvent(date, daiya);
                 } else {
                     // 2. 既にイベントが登録されていた場合
                     if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
@@ -257,6 +262,13 @@ public class GGsync {
                     }
                 }
             });
+            //try {
+            //    //oem = cbClient.sendReceive( dgaroon.getAddEvents() );
+            //} catch (AxisFault e) {
+            //    // 新規イベントがない
+            //    LOGGER.info("[*] 新規イベントがありません");
+            //}
+
             try {
                 oem = cbClient.sendReceive( dgaroon.getModifyEvents() );
             } catch (AxisFault e) {

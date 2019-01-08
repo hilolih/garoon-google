@@ -18,6 +18,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 import com.cybozu.garoon3.schedule.Span;
+import com.cybozu.garoon3.schedule.Member;
+import com.cybozu.garoon3.schedule.MemberType;
+import com.cybozu.garoon3.schedule.ScheduleAddEvents;
 import com.cybozu.garoon3.schedule.ScheduleModifyEvents;
 
 /*
@@ -29,10 +32,12 @@ public class DoshinGaroonDaiya {
 
     private List<com.cybozu.garoon3.schedule.Event> GaroonSchedules;
     private String Keyword = "--- From Unkou Web ---";
+    private ScheduleAddEvents AddEvents;
     private ScheduleModifyEvents ModifyEvents;
 
     DoshinGaroonDaiya () {
         this.GaroonSchedules = new ArrayList<com.cybozu.garoon3.schedule.Event>();
+        this.AddEvents = new ScheduleAddEvents();
         this.ModifyEvents = new ScheduleModifyEvents();
     }
 
@@ -92,6 +97,10 @@ public class DoshinGaroonDaiya {
         });
     }
 
+    public void addNewEvent(Date date, String daiya) {
+        com.cybozu.garoon3.schedule.Event event = new com.cybozu.garoon3.schedule.Event();
+    }
+
     public void addUpdateEvent(Date date, String daiya) {
         // 日付が一致するスケジュールを取得
         List<com.cybozu.garoon3.schedule.Event> list = this.getSameDateSchedule(date);
@@ -112,10 +121,14 @@ public class DoshinGaroonDaiya {
             }
             ev.setSpans(this.daiyaSpans(date));
             
-            //this.dump(ev);
+            this.dump(ev);
             this.ModifyEvents.addModifyEvent( ev );
         });
 
+    }
+
+    public ScheduleAddEvents getAddEvents() {
+        return this.AddEvents;
     }
 
     public ScheduleModifyEvents getModifyEvents() {
@@ -201,6 +214,12 @@ public class DoshinGaroonDaiya {
         System.out.println( "期間( Span ）: " + start + " to " + end );
         System.out.println( "終日( Allday ）: " + event.isAllDay() );
         System.out.println( "開始のみ( StartOnly ）: " + event.isStartOnly() );
+        event.getMembers().forEach( member -> {
+            System.out.println( "メンバーID : " + member.getID() );
+            System.out.println( "メンバーName : " + member.getName() );
+            System.out.println( "メンバーType : " + member.getType() );
+            System.out.println( "順序？ : " + Integer.toString(member.getOrder()) );
+        });
     }
 
 }

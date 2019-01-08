@@ -20,6 +20,7 @@ public class GGsyncProperties {
 	private String GAROON_URL, GAROON_ACCOUNT, GAROON_PASSWORD;
 	private String EXECUTION_LEVEL;
 	private String DEVSRV_ONLY, DEVSRV_URL, DEVSRV_DB_ACCOUNT, DEVSRV_DB_PASS;
+	private String GAROON_ID, GAROON_USERNAME;
 	private Date SYNC_START_DATE, SYNC_END_DATE;
 	private Date SYNC_START_DATE_UTC, SYNC_END_DATE_UTC;
 	private Integer GAROON_MEMBER_LIMIT;
@@ -72,6 +73,11 @@ public class GGsyncProperties {
 			this.DEVSRV_URL = prop.getProperty("devsrv.url").trim();
             this.DEVSRV_DB_ACCOUNT = prop.getProperty("devsrv.db.account").trim();
             this.DEVSRV_DB_PASS = prop.getProperty("devsrv.db.pass").trim();
+			/**
+			 * 2019/01/09 Garoon追加情報
+			 */
+            this.GAROON_ID = prop.getProperty("garoon.id").trim();
+            this.GAROON_USERNAME = prop.getProperty("garoon.username").trim();
 		} catch(Exception e) {
 			throw new Exception("Syntax error: " + property + e);
 		}
@@ -159,5 +165,13 @@ public class GGsyncProperties {
 
 	public String getDevsrvDbPass() {
 		return this.DEVSRV_DB_PASS;
+	}
+
+	public String getGaroonId() {
+		return this.GAROON_ID;
+	}
+
+	public String getGaroonUsername() {
+		return this.GAROON_USERNAME;
 	}
 }
