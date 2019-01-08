@@ -111,6 +111,12 @@ public class GGsyncDb {
 		String sql = "SELECT google_id FROM " + TABLE_NAME + " WHERE garoon_id NOT IN(";
 		sql += StringUtils.join(existsScheduleList, ",") + ")";
 
+        // 2019/01/09 追加
+        // 過去のスケジュールは削除対象としない
+	    Date currentDate = new Date();
+        sql += " and end_date > " + currentDate.getTime();
+
+
 		this.PS = this.CON.prepareStatement(sql);
 
 		ResultSet rs = this.PS.executeQuery();
