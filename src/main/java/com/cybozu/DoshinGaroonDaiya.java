@@ -99,6 +99,7 @@ public class DoshinGaroonDaiya {
 
     public void addNewEvent(Date date, String daiya) {
         com.cybozu.garoon3.schedule.Event event = new com.cybozu.garoon3.schedule.Event();
+        event.setDetail(daiya);
     }
 
     public void addUpdateEvent(Date date, String daiya) {
@@ -110,15 +111,8 @@ public class DoshinGaroonDaiya {
             // System.out.println("----------------------------------------------------------------");
             ev.setDetail( daiya );
             // スケジュールのタイトル左にあるタグ
-            if ( daiya.equals("【休】") ) {
-                ev.setPlan("休み");
-            } else if ( daiya.indexOf("00") >= 0 ) {
-                // 8:00などの00にマッチしたら当番
-                ev.setPlan("当番");
-            } else {
-                // その他、Fや組合、出張など
-                ev.setPlan("出勤");
-            }
+            ev.setPlan( this.getPlanTag(daiya) );
+            // 時刻(終日がうまく動かないので、はじめと終わりの時間を一緒にしている）
             ev.setSpans(this.daiyaSpans(date));
             
             this.dump(ev);
@@ -198,6 +192,21 @@ public class DoshinGaroonDaiya {
            .collect(Collectors.toList());
     }
 
+    /*
+     * ダイヤの種類の応じてタグ名を変更する
+     */
+    private String getPlanTag(String daiya) {
+        // スケジュールのタイトル左にあるタグ
+        if ( daiya.equals("【休】") ) {
+            return "休み";
+        } else if ( daiya.indexOf("00") >= 0 ) {
+            // 8:00などの00にマッチしたら当番
+            return "当番";
+        } else {
+            // その他、Fや組合、出張など
+            return "出勤";
+        }
+    }
     /*
      *
      */
