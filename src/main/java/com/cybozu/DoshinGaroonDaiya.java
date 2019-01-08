@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import com.cybozu.garoon3.schedule.Span;
 import com.cybozu.garoon3.schedule.ScheduleModifyEvents;
@@ -80,8 +81,14 @@ public class DoshinGaroonDaiya {
         // 要素数１つのリストに対し、タイトルが一致している場合はtrue、
         // 同じであればfalseを返す
         // System.out.println(list.stream().noneMatch(ev -> { return ev.getDetail().equals(daiya);}));
+        // System.out.println( date );
+        // list.stream().forEach( (ev) ->{ 
+        //     Span span = ev.getSpans().get(0);
+        //     Date start = span.getStart();
+        //     System.out.println(start);
+        // });
         return list.stream().noneMatch(ev -> {
-            return ev.getDetail().equals(daiya);
+            return ( ev.getDetail().equals(daiya) && this.compareDateAndHours(date, ev) );
         });
     }
 
@@ -93,24 +100,18 @@ public class DoshinGaroonDaiya {
             // this.dump(ev);
             // System.out.println("----------------------------------------------------------------");
             ev.setDetail( daiya );
+            // スケジュールのタイトル左にあるタグ
             if ( daiya.equals("【休】") ) {
                 ev.setPlan("休み");
-            } else {
+            } else if ( daiya.indexOf("00") >= 0 ) {
+                // 8:00などの00にマッチしたら当番
                 ev.setPlan("当番");
+            } else {
+                // その他、Fや組合、出張など
+                ev.setPlan("出勤");
             }
-            // List<Span> ss = new ArrayList<Span>();
-            // Span s = new Span();
-            // LocalDateTime ldt = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-            // int y = ldt.getYear();
-            // int m = ldt.getMonthValue();
-            // int d = ldt.getDayOfMonth();
-            // Date start = Date.from(ldt.minusHours(9).atZone(ZoneId.systemDefault()).toInstant());
-            // Date end = Date.from(ldt.minusHours(9).plusDays(1).minusMinutes(1).atZone(ZoneId.systemDefault()).toInstant());
-            // s.setStart( start );
-            // s.setEnd( end );
-            // ss.add(s);
-            // ev.setSpans(ss);
-            //
+            ev.setSpans(this.daiyaSpans(date));
+            
             //this.dump(ev);
             this.ModifyEvents.addModifyEvent( ev );
         });
@@ -119,6 +120,26 @@ public class DoshinGaroonDaiya {
 
     public ScheduleModifyEvents getModifyEvents() {
         return this.ModifyEvents;
+    }
+
+    /*
+     * スケジュールの期間をセットする
+     * ※ はじめと終わりの時間を一緒にしている
+     *    8時間足すと夜勤が見づらくなるので。
+     */
+    private List<Span> daiyaSpans(Date date) {
+        // Date -> LocalDateTime
+        LocalDateTime ldt = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+        // LocalDateTime -> Date(９時間戻す）
+        Date d = Date.from(ldt.minusHours(9).atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Span> ss = new ArrayList<Span>();
+        Span s = new Span();
+        s.setStart( d );
+        s.setEnd( d );
+
+        ss.add(s);
+        return ss;
     }
 
     /*
@@ -132,8 +153,27 @@ public class DoshinGaroonDaiya {
         if (span == null) {
             return false;
         }
-        Date start = span.getStart();
-        return date.compareTo( start ) == 0;
+        // 運行WEBのダイヤ日時から時分秒を削ったもの
+        LocalDateTime ldt_devsrv = 
+            LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault()).truncatedTo(ChronoUnit.DAYS);
+        // garoonのダイヤ日時から時分秒を削ったもの
+        LocalDateTime ldt_garoon = 
+            LocalDateTime.ofInstant(span.getStart().toInstant(), ZoneId.systemDefault()).truncatedTo(ChronoUnit.DAYS);
+        return ldt_devsrv.compareTo( ldt_garoon ) == 0;
+    }
+
+    /*
+     * Eventの日付と運行WEBダイヤの日付を比較(時刻まで）
+     */
+    private Boolean compareDateAndHours(Date date, com.cybozu.garoon3.schedule.Event ev) {
+        if (date == null) {
+            return false;
+        }
+        Span span = ev.getSpans().get(0);
+        if (span == null) {
+            return false;
+        }
+        return date.compareTo(span.getStart()) == 0;
     }
 
     /*

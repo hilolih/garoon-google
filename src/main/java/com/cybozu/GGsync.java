@@ -27,6 +27,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.axiom.om.OMElement;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.axis2.AxisFault;
 
 import com.cybozu.garoon3.base.BaseGetUsersByLoginName;
 import com.cybozu.garoon3.common.CBServiceClient;
@@ -205,7 +206,7 @@ public class GGsync {
              * 運行WEBのDBをSELECTする
              *
              * ex) 社員番号が107001で、今月が12月の場合
-             * ※ ncodeの値はgGroonのアカウントと同一のため、流用している
+             * * ncodeの値はgaroonのアカウントと同一のため、流用している
              * select * from daiya where ncode = '107001' and month IN ('12', '1');
              */
             DoshinUnkoDb doshin = null;
@@ -256,7 +257,12 @@ public class GGsync {
                     }
                 }
             });
-            oem = cbClient.sendReceive( dgaroon.getModifyEvents() );
+            try {
+                oem = cbClient.sendReceive( dgaroon.getModifyEvents() );
+            } catch (AxisFault e) {
+                // 更新すべきイベントがない
+                LOGGER.info("[*] 更新イベントがありません");
+            }
 
 
             if (devsrvOnly.equals("1")) {
