@@ -49,8 +49,25 @@ public class GGsyncProperties {
 			this.GAROON_ACCOUNT = prop.getProperty("garoon.account").trim();
 			this.GAROON_PASSWORD = prop.getProperty("garoon.password").trim();
 
-			long syncBeforeDays = Long.parseLong(prop.getProperty("sync.before.days", "1").trim());
-			long syncAfterDays = Long.parseLong(prop.getProperty("sync.after.days", "7").trim());
+			//long syncBeforeDays = Long.parseLong(prop.getProperty("sync.before.days", "1").trim());
+			//long syncAfterDays = Long.parseLong(prop.getProperty("sync.after.days", "7").trim());
+            /*
+             * 2019/01/09
+             * 運行WEBの同期の都合上、日数をこれ以下にしてしまうと
+             * 既にあるスケジュールも新規で登録されてしまうので、エラーではじくように変更
+             */
+			long syncBeforeDays = Long.parseLong(prop.getProperty("sync.before.days", "31").trim());
+			long syncAfterDays = Long.parseLong(prop.getProperty("sync.after.days", "62").trim());
+
+            if ( syncBeforeDays < 31 ) {
+                System.err.println("[!] sync.before.days は31以上にしてください" );
+                System.exit(-1);
+            }
+            if ( syncAfterDays < 62 ) {
+                System.err.println("[!] sync.after.days は62以上にしてください" );
+                System.exit(-1);
+            }
+
 
 			Date currentDate = new Date();
 			this.SYNC_START_DATE = new Date(currentDate.getTime() - 60 * 60 * 24 * 1000 * syncBeforeDays);

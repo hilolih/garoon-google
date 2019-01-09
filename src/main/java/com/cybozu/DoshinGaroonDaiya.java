@@ -97,9 +97,21 @@ public class DoshinGaroonDaiya {
         });
     }
 
-    public void addNewEvent(Date date, String daiya) {
+    public void addNewEvent(Date date, String daiya, String garoonId, String garoonUsername) {
         com.cybozu.garoon3.schedule.Event event = new com.cybozu.garoon3.schedule.Event();
+
         event.setDetail(daiya);
+        // スケジュールのタイトル左にあるタグ
+        event.setPlan( this.getPlanTag(daiya) );
+        // 時刻(終日がうまく動かないので、はじめと終わりの時間を一緒にしている）
+        event.setSpans(this.daiyaSpans(date));
+        //  "--- From Unkou Web ---" をメモ欄に
+        event.setDescription(this.Keyword);
+
+        event.setMembers( this.loginMember(garoonId, garoonUsername) );
+        // System.out.println("----------------------------------------------------------------");
+        // this.dump(event);
+        this.AddEvents.addEvent( event );
     }
 
     public void addUpdateEvent(Date date, String daiya) {
@@ -127,6 +139,16 @@ public class DoshinGaroonDaiya {
 
     public ScheduleModifyEvents getModifyEvents() {
         return this.ModifyEvents;
+    }
+
+    /*
+     * Memberを作成する
+     */
+    private List<Member> loginMember(String id, String username) {
+        Member m = new Member( MemberType.USER, Integer.parseInt(id), 0, username );
+        List<Member> members = new ArrayList<Member>();
+        members.add(m);
+        return members;
     }
 
     /*

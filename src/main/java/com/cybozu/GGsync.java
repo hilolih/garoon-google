@@ -252,7 +252,7 @@ public class GGsync {
                 if ( !dgaroon.existsGaroonSchedules(date) ) {
                     // 1. Garoonに存在しなければ、新規で登録する
                     LOGGER.info("[*] 新規登録: " + date + " " + daiya);
-                    //dgaroon.addNewEvent(date, daiya);
+                    // dgaroon.addNewEvent(date, daiya, garoonId, garoonUsername);
                 } else {
                     // 2. 既にイベントが登録されていた場合
                     if ( dgaroon.diffGaroonSchedule(date, daiya) ) {
@@ -262,12 +262,12 @@ public class GGsync {
                     }
                 }
             });
-            //try {
-            //    //oem = cbClient.sendReceive( dgaroon.getAddEvents() );
-            //} catch (AxisFault e) {
-            //    // 新規イベントがない
-            //    LOGGER.info("[*] 新規イベントがありません");
-            //}
+            try {
+                oem = cbClient.sendReceive( dgaroon.getAddEvents() );
+            } catch (AxisFault e) {
+                // 新規イベントがない
+                LOGGER.info("[*] 新規イベントがありません");
+            }
 
             try {
                 oem = cbClient.sendReceive( dgaroon.getModifyEvents() );
